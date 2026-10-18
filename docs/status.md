@@ -5,10 +5,9 @@
 - `DownFlow/ASMR` - 19,803 clips, Qwen3-ASR transcripts, upstream schema (16.3 GB)
 - `DownFlow/ASMR-llm-lora` - Qwen3.5-0.8B LoRA, 10 epochs
 - `DownFlow/ASMR-f5tts` - teacher F5-TTS, 21 epochs / 91,750 updates (5.4 GB)
-- `DownFlow/ASMR-f5tts-4step` - v1 4-step student. **Invalid**: trained before
-  the pinyin-tokenisation fix, so text conditioning was all zeros. v2 replaces
-  it if the emergency upload completed; otherwise rerun
-  `scripts/83_distill_v2.py`.
+- `DownFlow/ASMR-f5tts-4step` - v2 4-step student (fixed pinyin conditioning),
+  `model_4step_v2.pt`. The v1 `model_4step.pt` is invalid (trained with all-zero
+  text tokens); ignore/delete it.
 - `DownFlow/ASMR-onnx` - teacher fp16/int4, v1 student fp16/int4, sweep results
 
 ## Open items
@@ -22,5 +21,8 @@
   cap. Our `85_quant_ab.py` shows the correct recipe.
 - Web app `tuning.json` sets `flowSteps: 32`, which overrides the manifest's
   16-step recommendation.
-- 4-step distillation v2 (fixed pinyin) was running; see
-  `out/overnight/logs/distill_v2.log` and `out/overnight/emergency_upload.log`.
+- 4-step v2 distillation completed: 4,984 steps / 90 min. Sweep on the student
+  (same 莼儿 prompt, tongue twisters): 32:2 CER 0.111, 16:2 0.111, **8:0 0.028**,
+  **4:0 0.152**. The pinyin fix moved 4:0 from 0.597 to 0.152; 8:0 is the
+  strongest student config. MFCC-DTW vs the teacher (38-50) means the waveform
+  differs as expected from distillation; judge by listening.
