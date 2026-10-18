@@ -1,0 +1,17 @@
+[17:02:46] post-sweep: waiting for the overnight pipeline to finish
+[17:10:29] post-sweep: waiting for the overnight pipeline to finish
+[20:59:32] post-sweep: running sweep on /root/F5-TTS/ckpts/asmr_zh_full/model_last.pt
+[20:59:54] post-sweep: sweep exited 1
+[20:59:54] post-sweep: no sweep.json produced
+[21:02:35] post-sweep: waiting for the overnight pipeline to finish
+[21:02:35] post-sweep: running sweep on /root/F5-TTS/ckpts/asmr_zh_full/model_last.pt
+[21:03:06] post-sweep: sweep exited 0
+[21:03:06] post-sweep: distilling a 4-step student (45 min budget)
+[21:48:19] post-sweep: distill exited 0
+[21:49:16] post-sweep: student onnx export exited 0
+[21:49:22] post-sweep: student int4 quantize exited 0
+[21:49:42] post-sweep: 4-step sweep appended to report
+[21:49:52] post-sweep: uploaded DownFlow/ASMR-f5tts-4step
+[21:49:56] post-sweep: uploaded 4-step graphs to DownFlow/ASMR-onnx
+[21:49:57] post-sweep: sweep uploaded to DownFlow/ASMR-onnx
+[21:49:57] post-sweep: done
