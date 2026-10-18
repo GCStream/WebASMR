@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ASMR transcript accuracy review</title>
+<link rel="stylesheet" href="style.css"/>
+</head><body>
+
+<div id="gate" class="gate">
+  <div class="gatebox">
+    <h3>Enter console secret</h3>
+    <p class="hint">Same secret as the transcripts console (<code>/root/.qc_secret</code>).</p>
+    <input id="secret" type="password" size="36" placeholder="secret"/>
+    <button id="unlock">Unlock</button>
+    <div id="gaterr" class="err"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <h2>ASMR accuracy review<small id="subtitle">VibeVoice-ASR segment transcripts</small></h2>
+  </div>
+  <div class="progressbox">
+    <div class="prog"><i id="progbar"></i></div>
+    <div class="progresslabel"><span id="progtext">0 / 0</span> labeled
+      <span id="counts" class="counts"></span></div>
+  </div>
+  <div class="toolbar">
+    <select id="mode" title="queue filter">
+      <option value="unlabeled">unlabeled</option>
+      <option value="all">all</option>
+      <option value="labeled">labeled</option>
+      <option value="suspicious">suspicious</option>
+      <option value="tags">with event tags</option>
+      <option value="multi">multi-speaker files</option>
+      <option value="short">shorter than 3 s</option>
+      <option value="long">longer than 12 s</option>
+    </select>
+    <select id="performer"><option value="">all performers</option></select>
+    <input id="search" type="search" placeholder="search text…" size="18"/>
+    <label class="chk">sample
+      <input id="sample" type="number" min="0" step="25" value="0" style="width:70px"
+             title="0 = whole filtered queue; N = random N-item sample"/></label>
+    <label class="chk"><input type="checkbox" id="shuffle"/> shuffle</label>
+    <label class="chk"><input type="checkbox" id="autonext" checked/> auto-next</label>
+    <button id="export" class="ghost">export labels</button>
+    <span id="savestate" class="savestate"></span>
+  </div>
+</header>
+
+<main id="main" hidden>
+  <section class="card">
+    <div class="cardtop">
+      <div class="filemeta">
+        <span id="mfile" class="mono"></span>
+        <span id="mtime" class="mono dim"></span>
+      </div>
+      <div class="badges" id="mbadges"></div>
+      <div class="navbtns">
+        <button id="prev" class="ghost" title="previous (←)">← prev</button>
+        <button id="next" class="ghost" title="next (→)">next →</button>
+        <button id="skip" class="ghost" title="skip without labeling (s)">skip</button>
+      </div>
+    </div>
+
+    <div class="wavewrap">
+      <canvas id="wave" class="wave" height="110"></canvas>
+      <div class="transport">
+        <button id="play" class="play" title="play/pause (space)">▶</button>
+        <button id="replay" class="ghost" title="replay (r)">↺ replay</button>
+        <label class="chk"><input type="checkbox" id="loop"/> loop</label>
+        <label class="chk"><input type="checkbox" id="context"/> context ±1s</label>
+        <select id="rate" title="playback speed">
+          <option value="1">1.0×</option>
+          <option value="0.75">0.75×</option>
+          <option value="0.5">0.5×</option>
+        </select>
+        <span id="clock" class="mono dim">0.00 / 0.00</span>
+      </div>
+    </div>
+
+    <div class="transcriptbox">
+      <div class="labelrow"><span class="tag">VibeVoice</span>
+        <span id="mchars" class="mono dim"></span></div>
+      <div id="mtext" class="text"></div>
+      <div id="baselinewrap" class="baselinewrap">
+        <div class="labelrow"><span class="tag alt">Qwen3-ASR</span>
+          <span class="dim">30 s clip covering this window — may span more audio</span>
+          <button id="usebaseline" class="ghost tiny">use as correction</button></div>
+        <div id="mbaseline" class="baseline"></div>
+      </div>
+    </div>
+
+    <div class="labelbox">
+      <div class="labelrow"><span class="tag">accuracy</span>
+        <span class="hint">1 correct · 2 minor errors · 3 major errors · 4 unusable</span></div>
+      <div class="accuracy">
+        <button data-a="correct" data-k="1"><b>1</b> correct</button>
+        <button data-a="minor" data-k="2"><b>2</b> minor</button>
+        <button data-a="major" data-k="3"><b>3</b> major</button>
+        <button data-a="unusable" data-k="4"><b>4</b> unusable</button>
+      </div>
+      <div class="labelrow"><span class="tag">errors</span>
+        <span class="hint">toggles: w wrong words · m missing · h hallucinated · b boundary · n non-speech · o other</span></div>
+      <div class="errors" id="errors"></div>
+      <div class="field">
+        <label for="corrected">corrected transcript (optional)</label>
+        <textarea id="corrected" rows="2" placeholder="type what was actually said…"></textarea>
+      </div>
+      <div class="field">
+        <label for="notes">notes</label>
+        <input id="notes" type="text" placeholder="optional note"/>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <h3>how to review</h3>
+    <ul class="help">
+      <li><b>1–4</b> set accuracy and auto-advance</li>
+      <li><b>space</b> play/pause · <b>r</b> replay</li>
+      <li><b>← →</b> move without labeling</li>
+      <li><b>w m h b n o</b> toggle error types</li>
+      <li><b>e</b> jump to corrected text</li>
+      <li><b>s</b> skip · <b>?</b> this panel</li>
+    </ul>
+    <h3>what counts as an error</h3>
+    <ul class="help">
+      <li><b>correct</b> — words match the audio</li>
+      <li><b>minor</b> — a wrong character or punctuation that does not change meaning</li>
+      <li><b>major</b> — wrong words, missing clause, or text about audio that is not there</li>
+      <li><b>unusable</b> — clip is not a single clean utterance, or the audio is not speech</li>
+    </ul>
+    <h3>queue</h3>
+    <div class="queuestats" id="queuestats"></div>
+    <h3>accuracy so far</h3>
+    <div class="queuestats" id="summary">no labels yet</div>
+  </aside>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body></html>
