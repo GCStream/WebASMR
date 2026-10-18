@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Base vs fine-tuned — 莼儿</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+.pair{margin:18px 0;padding-top:14px;border-top:1px solid #d6d0bd}
+.pair .text{font-size:19px;margin:6px 0 10px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.player{background:#e6e1d1;border-radius:4px;padding:10px}
+.player audio{width:100%;margin-top:6px}
+.player.base .tag{background:transparent;color:#000;border:1px solid #000}
+.player.ft .tag{background:#000;color:#fff}
+.choice{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.choice button{padding:7px 14px}
+.choice button.on{background:#000;color:#fff;border-color:#000}
+</style>
+</head><body>
+
+<div id="gate" class="gate">
+  <div class="gatebox">
+    <h3>Enter console secret</h3>
+    <p class="hint">Same secret as the other review tabs.</p>
+    <input id="secret" type="password" size="36" placeholder="secret"/>
+    <button id="unlock">Unlock</button>
+    <div id="gaterr" class="err"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <h2>Base vs fine-tuned<small>莼儿 reference · same prompt, text and seed · 16 steps, CFG 2</small></h2>
+  </div>
+  <div class="progressbox">
+    <div class="progresslabel"><span id="sum">no choices yet</span></div>
+  </div>
+  <div class="toolbar">
+    <button id="export" class="ghost">export choices</button>
+    <span id="savestate" class="savestate"></span>
+  </div>
+</header>
+
+<main id="main" hidden>
+  <section class="card" id="pairs"></section>
+  <aside class="side">
+    <h3>what you are hearing</h3>
+    <ul class="help">
+      <li><b>base</b> — original F5TTS_v1_Base, no ASMR fine-tune</li>
+      <li><b>fine-tuned</b> — 21 epochs on 33.9 h of ASMR, 131 voices</li>
+      <li>same 莼儿 prompt and seed, so the difference is the weights</li>
+    </ul>
+    <h3>what to judge</h3>
+    <ul class="help">
+      <li>which one sounds more like 莼儿</li>
+      <li>base keeps zero-shot cloning; fine-tuned may drift to the corpus average voice</li>
+      <li>ignore the delivery style: fine-tuned is meant to be slower/breathier</li>
+    </ul>
+  </aside>
+</main>
+
+<div id="toast" class="toast"></div>
+<script src="finetune.js"></script>
+</body></html>

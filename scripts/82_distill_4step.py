@@ -97,7 +97,8 @@ def main() -> None:
     from f5_tts.infer.utils_infer import load_model
     from f5_tts.model import DiT
     from f5_tts.model.modules import MelSpec
-    from f5_tts.model.utils import lens_to_mask, list_str_to_idx, mask_from_frac_lengths
+    from f5_tts.model.utils import (convert_char_to_pinyin, lens_to_mask,
+                                    list_str_to_idx, mask_from_frac_lengths)
     import soundfile as sf
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -150,7 +151,9 @@ def main() -> None:
             frac = torch.empty(b, device=device).uniform_(0.7, 1.0)
             span = mask_from_frac_lengths(lens, frac) & mask
             cond = torch.where(span[..., None], torch.zeros_like(x1), x1)
-            text = list_str_to_idx([clip["text"]], vocab).to(device)
+            # the vocab is pinyin: raw Chinese characters all map to id 0
+            tokens = convert_char_to_pinyin([clip["text"]], polyphone=True)
+            text = list_str_to_idx(tokens, vocab).to(device)
             x0 = torch.randn_like(x1)
 
             with torch.no_grad():

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Quantization A/B — 小莼</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+.abgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+.abside{background:#e6e1d1;border-radius:4px;padding:10px}
+.abside audio{width:100%;margin-top:6px}
+.abside .tag{font-size:12px;padding:3px 12px}
+.accuracy button.on[data-p=a]{background:#000;color:#fff;border-color:#000}
+.accuracy button.on[data-p=b]{background:#000;color:#fff;border-color:#000}
+.accuracy button.on[data-p=same]{background:var(--warn);border-color:var(--warn);color:#000}
+.accuracy button.on[data-p=bad]{background:var(--bad);border-color:var(--bad);color:#fff}
+.qmeta{font-size:11px;color:#555}
+</style>
+</head><body>
+
+<div id="gate" class="gate">
+  <div class="gatebox">
+    <h3>Enter console secret</h3>
+    <p class="hint">Same secret as the other review tabs.</p>
+    <input id="secret" type="password" size="36" placeholder="secret"/>
+    <button id="unlock">Unlock</button>
+    <div id="gaterr" class="err"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <h2>Quantization A/B<small>小莼（纯儿） · 16-step teacher · fp16 vs int4</small></h2>
+  </div>
+  <div class="progressbox">
+    <div class="prog"><i id="qbar"></i></div>
+    <div class="progresslabel"><span id="qprog">0 / 0</span> judged</div>
+  </div>
+  <div class="toolbar">
+    <label class="chk"><input type="checkbox" id="qall"/> show judged</label>
+    <label class="chk"><input type="checkbox" id="qautonext" checked/> auto-next</label>
+    <button id="qexport" class="ghost">export labels</button>
+    <span id="qsavestate" class="savestate"></span>
+  </div>
+</header>
+
+<main id="qmain" hidden>
+  <section class="card">
+    <div class="cardtop">
+      <div class="filemeta">
+        <span id="qid" class="mono"></span>
+        <span class="qmeta">Two renderings of the same line. One is int4, one is fp16. Which sounds better?</span>
+      </div>
+      <div class="navbtns">
+        <button id="qprev" class="ghost">← prev</button>
+        <button id="qnext" class="ghost">next →</button>
+      </div>
+    </div>
+
+    <div class="labelrow"><span class="tag">text</span>
+      <span id="qmeta" class="mono dim"></span></div>
+    <div id="qtext" class="text"></div>
+
+    <div class="abgrid">
+      <div class="abside">
+        <div class="labelrow"><span class="tag alt">A</span>
+          <button id="playA" class="ghost tiny">play A</button></div>
+        <audio id="audioA" controls preload="metadata"></audio>
+      </div>
+      <div class="abside">
+        <div class="labelrow"><span class="tag alt">B</span>
+          <button id="playB" class="ghost tiny">play B</button></div>
+        <audio id="audioB" controls preload="metadata"></audio>
+      </div>
+    </div>
+    <button id="playAB" class="ghost">▶ play A then B</button>
+
+    <div class="labelbox">
+      <div class="labelrow"><span class="tag">preference</span>
+        <span class="hint">1 A better · 2 B better · 3 same · 4 both bad</span></div>
+      <div class="accuracy">
+        <button data-p="a"><b>1</b> A better</button>
+        <button data-p="b"><b>2</b> B better</button>
+        <button data-p="same"><b>3</b> same</button>
+        <button data-p="bad"><b>4</b> both bad</button>
+      </div>
+      <div class="labelrow"><span class="tag">artifacts</span>
+        <span class="hint">toggle anything you hear</span></div>
+      <div class="errors" id="qartifacts"></div>
+      <div class="field">
+        <label for="qnotes">notes</label>
+        <input id="qnotes" type="text" placeholder="e.g. metallic tail, dropped breath, click at 0:03"/>
+      </div>
+      <div id="qreveal" class="mono dim"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <h3>how to review</h3>
+    <ul class="help">
+      <li><b>space</b> play A then B</li>
+      <li><b>1–4</b> set preference and advance</li>
+      <li><b>← →</b> move without judging</li>
+      <li><b>e</b> notes field</li>
+    </ul>
+    <h3>what to listen for</h3>
+    <ul class="help">
+      <li>breath and whisper detail (int4 tends to lose it first)</li>
+      <li>metallic or buzzing tail</li>
+      <li>clicks or dropouts at segment edges</li>
+      <li>overall clarity of the words</li>
+    </ul>
+    <h3>summary</h3>
+    <div class="queuestats" id="qsummary">no judgements yet</div>
+  </aside>
+</main>
+
+<div id="qtoast" class="toast"></div>
+<script src="quant.js"></script>
+</body></html>

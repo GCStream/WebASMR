@@ -33,6 +33,7 @@ import io
 import json
 import os
 import subprocess
+import sys
 import threading
 import time
 from collections import defaultdict
@@ -42,11 +43,17 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from common.jsonlio import read_jsonl  # noqa: E402
 STATIC = Path(__file__).resolve().parent / "static"
 METADATA = ROOT / "out/dataset/metadata.csv"
 BASELINE = Path("/root/LocalASMR/asmr-bilingual-webml/data/processed/"
                 "zh_retranscribe/transcripts_qwen3asr.jsonl")
 LABELS = ROOT / "out/review/labels.jsonl"
+QUANT_DIR = ROOT / "out/quant_ab"
+QUANT_LABELS = ROOT / "out/review/quant_labels.jsonl"
+FT_DIR = ROOT / "out/voice_ft"
+FT_LABELS = ROOT / "out/review/ft_labels.jsonl"
 AUDIO_ROOT = Path("/root/data_raw/audio")
 CONTEXT_CACHE = ROOT / "out/review/ctx"
 CONTEXT_PAD_S = 1.0
@@ -57,7 +64,8 @@ ERROR_TYPES = ("wrong_words", "missing_words", "hallucinated", "bad_boundary",
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 SECRET = os.environ.get("QC_SECRET", "")
-PUBLIC = {"/", "/index.html", "/app.js", "/style.css"}
+PUBLIC = {"/", "/index.html", "/app.js", "/style.css", "/quant", "/quant.js",
+          "/finetune", "/finetune.js"}
 LOCK = threading.Lock()
 
 _state = {"items": [], "by_id": {}, "mtime": 0.0, "spans": None, "spans_mtime": 0.0}
@@ -194,6 +202,141 @@ def app_js():
 @app.get("/style.css")
 def style_css():
     return FileResponse(STATIC / "style.css", media_type="text/css")
+
+
+@app.get("/quant")
+def quant_page():
+    return FileResponse(STATIC / "quant.html")
+
+
+@app.get("/quant.js")
+def quant_js():
+    return FileResponse(STATIC / "quant.js", media_type="application/javascript")
+
+
+@app.get("/finetune")
+def finetune_page():
+    return FileResponse(STATIC / "finetune.html")
+
+
+@app.get("/finetune.js")
+def finetune_js():
+    return FileResponse(STATIC / "finetune.js", media_type="application/javascript")
+
+
+@app.get("/api/ft/items")
+def api_ft_items():
+    index = FT_DIR / "index.json"
+    if not index.exists():
+        return {"voice": "", "items": [], "labels": {}}
+    data = json.loads(index.read_text(encoding="utf-8"))
+    labels = {row["id"]: row for row in read_jsonl(FT_LABELS) if row.get("id")}
+    return {**data, "labels": labels}
+
+
+@app.get("/api/ft/audio/{item_id}/{variant}")
+def api_ft_audio(item_id: str, variant: str):
+    if variant not in ("base", "finetuned"):
+        return JSONResponse({"error": "bad variant"}, status_code=400)
+    if not item_id.replace("_", "").isalnum():
+        return JSONResponse({"error": "bad id"}, status_code=400)
+    path = FT_DIR / f"{item_id}_{variant}.wav"
+    if not path.exists():
+        return JSONResponse({"error": "missing audio"}, status_code=404)
+    return FileResponse(path, media_type="audio/wav",
+                        headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.post("/api/ft/label")
+async def api_ft_label(request: Request):
+    body = await request.json()
+    choice = body.get("choice")
+    if choice not in ("base", "finetuned", "same"):
+        return JSONResponse({"error": "bad choice"}, status_code=400)
+    row = {"id": body.get("id", ""), "choice": choice,
+           "notes": (body.get("notes") or "")[:2000], "ts": int(time.time())}
+    FT_LABELS.parent.mkdir(parents=True, exist_ok=True)
+    with LOCK, open(FT_LABELS, "a", encoding="utf-8") as f:
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+        f.flush()
+    return {"ok": True, "saved": row}
+
+
+@app.get("/api/ft/export.csv")
+def api_ft_export():
+    rows = read_jsonl(FT_LABELS)
+    queued = io.StringIO()
+    writer = csv.writer(queued)
+    writer.writerow(["id", "choice", "notes", "ts"])
+    for r in rows:
+        writer.writerow([r.get("id", ""), r.get("choice", ""),
+                         r.get("notes", ""), r.get("ts", "")])
+    return Response(queued.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition":
+                             'attachment; filename="finetune_labels.csv"'})
+
+
+@app.get("/api/quant/items")
+def api_quant_items():
+    index = QUANT_DIR / "index.json"
+    if not index.exists():
+        return {"voice": "", "items": [], "labels": {}}
+    data = json.loads(index.read_text(encoding="utf-8"))
+    labels = {}
+    for row in read_jsonl(QUANT_LABELS):
+        if row.get("id"):
+            labels[row["id"]] = row
+    return {**data, "labels": labels}
+
+
+@app.get("/api/quant/audio/{item_id}/{variant}")
+def api_quant_audio(item_id: str, variant: str):
+    if not variant.replace("_", "").isalnum():
+        return JSONResponse({"error": "bad variant"}, status_code=400)
+    if not item_id.replace("_", "").isalnum():
+        return JSONResponse({"error": "bad id"}, status_code=400)
+    path = QUANT_DIR / f"{item_id}_{variant}.wav"
+    if not path.exists():
+        return JSONResponse({"error": "missing audio"}, status_code=404)
+    return FileResponse(path, media_type="audio/wav",
+                        headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.post("/api/quant/label")
+async def api_quant_label(request: Request):
+    body = await request.json()
+    item_id = body.get("id", "")
+    preference = body.get("preference")
+    if preference not in ("a", "b", "same", "bad"):
+        return JSONResponse({"error": "bad preference"}, status_code=400)
+    row = {"id": item_id, "preference": preference,
+           "artifacts": [a for a in (body.get("artifacts") or []) if isinstance(a, str)][:12],
+           "notes": (body.get("notes") or "")[:2000],
+           "a_variant": body.get("a_variant", ""),
+           "b_variant": body.get("b_variant", ""),
+           "ts": int(time.time())}
+    QUANT_LABELS.parent.mkdir(parents=True, exist_ok=True)
+    with LOCK, open(QUANT_LABELS, "a", encoding="utf-8") as f:
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+        f.flush()
+    return {"ok": True, "saved": row}
+
+
+@app.get("/api/quant/export.csv")
+def api_quant_export():
+    rows = read_jsonl(QUANT_LABELS)
+    queued = io.StringIO()
+    writer = csv.writer(queued)
+    writer.writerow(["id", "preference", "artifacts", "notes", "a_variant",
+                     "b_variant", "ts"])
+    for r in rows:
+        writer.writerow([r.get("id", ""), r.get("preference", ""),
+                         ";".join(r.get("artifacts") or []), r.get("notes", ""),
+                         r.get("a_variant", ""), r.get("b_variant", ""),
+                         r.get("ts", "")])
+    return Response(queued.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition":
+                             'attachment; filename="quant_ab_labels.csv"'})
 
 
 @app.get("/api/meta")
