@@ -8,7 +8,9 @@
 - `DownFlow/ASMR-f5tts-4step` - v2 4-step student (fixed pinyin conditioning),
   `model_4step_v2.pt`. The v1 `model_4step.pt` is invalid (trained with all-zero
   text tokens); ignore/delete it.
-- `DownFlow/ASMR-onnx` - teacher fp16/int4, v1 student fp16/int4, sweep results
+- `DownFlow/ASMR-onnx` - teacher fp16/int4; student v2 fp16/int4 with MatMulNBits
+  block 16 as the deployed `tts4v2_int4` (mean rel error 0.133 vs 0.159 block 32
+  and 0.185 block 64), plus `tts4v2_int4_b32` as an alternative; sweep results
 
 ## Open items
 
