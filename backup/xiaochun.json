@@ -1,0 +1,16 @@
+{
+ "id": "xiaochun",
+ "name_zh": "小莼（纯儿）",
+ "name_en": "Xiaochun (Chuner)",
+ "mel_file": "refs/xiaochun.bin",
+ "mel_shape": [
+  100,
+  563
+ ],
+ "dtype": "float16",
+ "ref_text": "嗯，嗯，嗯，哇，看来你真的很喜欢女生的脚呢。哼，",
+ "ref_text_full": "嗯，嗯，嗯，哇，看来你真的很喜欢女生的脚呢。哼，你说你是喜欢我的脚呀？既然你这么会说话。",
+ "source": "莼儿/176 寸止足交--莼儿.mp3#16",
+ "seconds": 6.01,
+ "crop_note": "audio cropped to the reference transcript length (~4 chars/s)"
+}

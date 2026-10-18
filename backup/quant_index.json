@@ -1,0 +1,56 @@
+{
+ "voice": "小莼（纯儿）",
+ "items": [
+  {
+   "id": "q00",
+   "text": "吃葡萄不吐葡萄皮，不吃葡萄倒吐葡萄皮。",
+   "voice": "小莼（纯儿）",
+   "steps": 16,
+   "cfg": 2.0,
+   "a": "int4",
+   "b": "fp16",
+   "a_audio": "q00_int4.wav",
+   "b_audio": "q00_fp16.wav",
+   "seconds": {
+    "fp16": 4.59,
+    "int4": 4.59
+   },
+   "target_seconds": 4.6,
+   "ref_text": "看来你真的很喜欢女生的脚呢。哼，"
+  },
+  {
+   "id": "q01",
+   "text": "四是四，十是十，十四是十四，四十是四十。",
+   "voice": "小莼（纯儿）",
+   "steps": 16,
+   "cfg": 2.0,
+   "a": "int4",
+   "b": "fp16",
+   "a_audio": "q01_int4.wav",
+   "b_audio": "q01_fp16.wav",
+   "seconds": {
+    "fp16": 4.82,
+    "int4": 4.82
+   },
+   "target_seconds": 4.8,
+   "ref_text": "看来你真的很喜欢女生的脚呢。哼，"
+  },
+  {
+   "id": "q02",
+   "text": "红鲤鱼与绿鲤鱼与驴，黑化肥发灰会挥发，灰化肥挥发会发黑。",
+   "voice": "小莼（纯儿）",
+   "steps": 16,
+   "cfg": 2.0,
+   "a": "int4",
+   "b": "fp16",
+   "a_audio": "q02_int4.wav",
+   "b_audio": "q02_fp16.wav",
+   "seconds": {
+    "fp16": 6.76,
+    "int4": 6.76
+   },
+   "target_seconds": 6.8,
+   "ref_text": "看来你真的很喜欢女生的脚呢。哼，"
+  }
+ ]
+}

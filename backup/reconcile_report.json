@@ -1,0 +1,17 @@
+{
+ "stats": {
+  "segments": 14564,
+  "manually_labeled": 101,
+  "drop_manual_unusable": 1,
+  "source:manual_verified": 86,
+  "source:manual_correction": 14,
+  "source:agree": 12520,
+  "source:qwen3asr": 1344,
+  "source:qwen_rejected_gates": 503,
+  "drop_no_qwen": 96
+ },
+ "kept": 14467,
+ "changed_vs_vibevoice": 1358,
+ "agree_threshold": 0.8,
+ "audio_hours": 33.95
+}
